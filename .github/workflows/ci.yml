@@ -1,54 +1,103 @@
+# CI pipeline for JWT Pizza
 name: CI Pipeline
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    branches: ['main']
+  pull_request:
+    branches: ['main']
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
 
 jobs:
+  test:
+    name: UI tests + coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Install browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Update coverage badge
+        if: ${{ github.event_name == 'push' }}
+        env:
+          NET_ID: ${{ secrets.NET_ID }}
+          FACTORY_API_KEY: ${{ secrets.FACTORY_API_KEY }}
+        run: |
+          if [ -z "$NET_ID" ] || [ -z "$FACTORY_API_KEY" ]; then
+            echo "NET_ID or FACTORY_API_KEY secrets not set; skipping badge update."
+            exit 0
+          fi
+
+          sudo apt-get update
+          sudo apt-get install -y jq bc
+
+          coverage=$(jq -r '.total.lines.pct' coverage/coverage-summary.json)
+
+          if [ "$(echo "$coverage < 80" | bc)" -eq 1 ]; then
+            color="red"
+          else
+            color="green"
+          fi
+
+          curl -X POST "https://pizza-factory.cs329.click/api/badge/${NET_ID}/jwtpizzacoverage?label=Coverage&value=${coverage}%25&color=${color}" \
+            -H "authorization: bearer ${FACTORY_API_KEY}"
+
   build:
     name: Build
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.set_version.outputs.version }}
+    needs: test
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
+          node-version: 20
+          cache: 'npm'
 
-      - name: set version
-        id: set_version
-        run: |
-          version=$(date +'%Y%m%d.%H%M%S')
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          printf '{"version": "%s" }' "$version" > public/version.json
+      - name: Install deps
+        run: npm ci
 
       - name: Build
-        run: |
-          npm ci
-          npm run build
-          cp dist/index.html dist/404.html
+        run: npm run build
 
-      - name: Update pages artifact
+      - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dist/
+          path: dist
 
   deploy:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
     needs: build
-    permissions:
-      pages: write
-      id-token: write
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4

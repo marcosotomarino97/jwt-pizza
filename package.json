@@ -6,9 +6,12 @@
   "license": "ISC",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 127.0.0.1 --port 5173 --strictPort",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:coverage": "nyc --reporter=json-summary --reporter=text playwright test"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",
@@ -17,7 +20,11 @@
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.5.4",
-    "vite": "^5.2.8"
+    "vite": "^5.2.8",
+    "@playwright/test": "^1.58.2",
+    "nyc": "^17.1.0",
+    "playwright-test-coverage": "^1.2.12",
+    "vite-plugin-istanbul": "^7.2.1"
   },
   "dependencies": {
     "preline": "^2.1.0",

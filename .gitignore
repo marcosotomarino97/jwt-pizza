@@ -3,5 +3,8 @@
 cookies.txt
 config.js
 coverage
+.nyc_output
+playwright-report
+test-results
 dist
 **/.vite
