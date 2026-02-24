@@ -69,6 +69,9 @@ class HttpPizzaService implements PizzaService {
     }
     return Promise.resolve(result);
   }
+    async updateUser(name: string): Promise<User> {
+    return this.callEndpoint('/api/user', 'PUT', { name });
+  }
 
   async getMenu(): Promise<Menu> {
     return this.callEndpoint('/api/order/menu');

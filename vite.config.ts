@@ -1,14 +1,21 @@
-import { defineConfig } from 'vite';
-import istanbul from 'vite-plugin-istanbul';
+import { defineConfig } from 'vite'
+import istanbul from 'vite-plugin-istanbul'
 
-// Instrument source code for NYC so Playwright browser tests can generate coverage.
-export default defineConfig({
-  build: { sourcemap: true },
-  plugins: [
-    istanbul({
-      include: ['src/**/*'],
-      exclude: ['node_modules', 'tests', 'playwright.config.*'],
-      requireEnv: false,
-    }),
-  ],
-});
+export default defineConfig(() => {
+  const enableCoverage = process.env.COVERAGE === 'true'
+
+  return {
+    build: {
+      sourcemap: enableCoverage,
+    },
+    plugins: enableCoverage
+      ? [
+          istanbul({
+            include: ['src/**'],
+            exclude: ['node_modules', 'tests', 'playwright.config.*'],
+            requireEnv: false,
+          }),
+        ]
+      : [],
+  }
+})

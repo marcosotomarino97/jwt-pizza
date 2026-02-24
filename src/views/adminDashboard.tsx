@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import View from './view';
 import { useNavigate } from 'react-router-dom';
 import NotFound from './notFound';
@@ -16,6 +16,10 @@ export default function AdminDashboard(props: Props) {
   const [franchiseList, setFranchiseList] = React.useState<FranchiseList>({ franchises: [], more: false });
   const [franchisePage, setFranchisePage] = React.useState(0);
   const filterFranchiseRef = React.useRef<HTMLInputElement>(null);
+  const [showEditUser, setShowEditUser] = React.useState(false);
+  const [editName, setEditName] = React.useState('');
+  const [displayName, setDisplayName] = React.useState('Admin');
+  const [updateUserError, setUpdateUserError] = useState(false);
 
   React.useEffect(() => {
     (async () => {
@@ -43,6 +47,7 @@ export default function AdminDashboard(props: Props) {
   if (Role.isRole(props.user, Role.Admin)) {
     response = (
       <View title="Mama Ricci's kitchen">
+        <p data-testid="display-name">{displayName}</p>
         <div className="text-start py-8 px-4 sm:px-6 lg:px-8">
           <h3 className="text-neutral-100 text-xl">Franchises</h3>
           <div className="bg-neutral-100 overflow-clip my-4">
@@ -120,7 +125,67 @@ export default function AdminDashboard(props: Props) {
             </div>
           </div>
         </div>
-        <div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setUpdateUserError(false); 
+              setShowEditUser(true);
+            }}
+          >
+            Edit
+          </button>
+
+          {showEditUser && (
+            <div>
+              <h2>Edit User</h2>
+
+              <label htmlFor="edit-user-name">Name</label>
+              <input
+                id="edit-user-name"
+                name="name"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+              />
+
+              {updateUserError && (
+                <p data-testid="update-user-error">Update failed</p>
+              )}
+
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await pizzaService.updateUser(editName);
+
+                    // SUCCESS
+                    setDisplayName(editName);
+                    setEditName(editName);
+                    setShowEditUser(false);
+                    setUpdateUserError(false);
+                  } catch (e) {
+                    // FAILURE
+                    setUpdateUserError(true);
+                  }
+                }}
+              >
+                Save
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEditName(displayName);
+                  setShowEditUser(false);
+                  setUpdateUserError(false);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+          
+
           <Button className="w-36 text-xs sm:text-sm sm:w-64" title="Add Franchise" onPress={createFranchise} />
         </div>
       </View>

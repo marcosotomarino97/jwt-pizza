@@ -40,7 +40,6 @@ export type MockOptions = {
 };
 
 export async function installAppMocks(page: Page, opts: MockOptions = {}) {
-  // Reduce flakiness from missing globals + animations.
   await page.addInitScript(() => {
     window.HSStaticMethods = window.HSStaticMethods || { autoInit: () => {} };
 
