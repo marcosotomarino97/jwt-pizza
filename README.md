@@ -1,4 +1,4 @@
-[![CI Pipeline](https://github.com/marcosotomarino97/jwt-pizza/actions/workflows/ci.yml/badge.svg)](https://github.com/marcosotomarino97/jwt-pizza/actions/workflows/ci.yml)
+[![Deploy Frontend](https://github.com/marcosotomarino97/jwt-pizza/actions/workflows/deploy.yml/badge.svg)](https://github.com/marcosotomarino97/jwt-pizza/actions/workflows/deploy.yml)
 
 # 🍕 JWT Pizza
 
